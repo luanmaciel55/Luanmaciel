@@ -1,0 +1,1 @@
+export default function Entrar(){return <section className="section"><h1>Entrar</h1><p>Área administrativa do site. A autenticação segura será conectada ao Supabase.</p></section>}
