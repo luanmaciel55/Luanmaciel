@@ -1,0 +1,1 @@
+export default function AquiLayout({children}:{children:React.ReactNode}){return <>{children}</>}
