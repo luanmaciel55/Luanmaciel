@@ -1,0 +1,1 @@
+export default function Aqui(){return <section className="hotsite"><h1>Luan Maciel de Lemos</h1><p>Links, projetos e acessos importantes.</p><a className="hotbtn" href="/contato">Contato</a><a className="hotbtn" href="/contribuir">Contribuir</a><a className="hotbtn" href="/loja">Loja</a></section>}
