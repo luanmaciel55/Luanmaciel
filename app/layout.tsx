@@ -1,0 +1,4 @@
+import './globals.css';import Link from 'next/link';import type {Metadata} from 'next';
+export const metadata:Metadata={title:'Luan Maciel de Lemos',description:'Mentor, estrategista, idealizador e proclamador do Evangelho.'};
+const nav=[['/','Início'],['/loja','Loja'],['/projetos-missoes','Projetos e Missões'],['/evangelho','Evangelho'],['/trabalho','Trabalho'],['/contribuir','Contribuir'],['/contato','Contato']];
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body><header><Link className="brand" href="/">LM</Link><nav>{nav.map(([h,l])=><Link key={h} href={h}>{l}</Link>)}</nav><Link className="login" href="/entrar">Entrar</Link></header><main>{children}</main><footer>O Senhor Deus Seja Louvado!</footer></body></html>}
