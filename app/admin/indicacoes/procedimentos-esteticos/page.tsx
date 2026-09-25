@@ -1,5 +1,5 @@
 'use client';
-import{useEffect,useState}from'react';import Link from'next/link';import{supabase}from'../../../lib/supabase';
+import{useEffect,useState}from'react';import Link from'next/link';import{supabase}from'../../../../lib/supabase';
 type Btn={label:string,type:'link'|'whatsapp',value:string,message?:string,style:string};
 export default function EditarIndicacao(){const[ok,setOk]=useState<boolean|null>(null),[d,setD]=useState<any>(null),[msg,setMsg]=useState('');
 useEffect(()=>{(async()=>{const{data:{user}}=await supabase.auth.getUser();if(!user){setOk(false);return}const{data:a}=await supabase.rpc('is_site_admin');setOk(!!a);if(a){const{data}=await supabase.from('recommendation_settings').select('*').eq('slug','procedimentos-esteticos').single();setD(data)}})()},[]);
