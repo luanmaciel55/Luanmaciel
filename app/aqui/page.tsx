@@ -13,10 +13,10 @@ type B = {
   animation: string;
 };
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('timeout')), ms);
-    promise.then(
+    Promise.resolve(promise).then(
       (value) => { clearTimeout(timer); resolve(value); },
       (error) => { clearTimeout(timer); reject(error); },
     );
@@ -48,7 +48,7 @@ export default function Aqui() {
 
         if (buttonsError) {
           console.error('[HotSite] Falha ao carregar botões:', buttonsError);
-          setError('Não foi possível carregar os botões do banco de dados. Confira a conexão e as permissões do Supabase.');
+          setError('Falha no Supabase: ' + (buttonsError.message || 'erro desconhecido') + (buttonsError.code ? ' (código ' + buttonsError.code + ')' : ''));
           setButtons([]);
         } else {
           setButtons(data || []);
