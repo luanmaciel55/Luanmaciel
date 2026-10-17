@@ -13,6 +13,16 @@ type B = {
   animation: string;
 };
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
+
 export default function Aqui() {
   const [title, setTitle] = useState('Luan Maciel de Lemos');
   const [sub, setSub] = useState('');
@@ -27,44 +37,52 @@ export default function Aqui() {
       setLoading(true);
       setError('');
 
-      const { data: settings, error: settingsError } = await supabase
-        .from('hotsite_settings')
-        .select('*')
-        .eq('id', 1)
-        .maybeSingle();
+      // Load buttons first so a slow settings query cannot block the page.
+      try {
+        const { data, error: buttonsError } = await withTimeout(
+          supabase.from('hotsite_buttons').select('*').eq('active', true).order('sort_order', { ascending: true }),
+          6000,
+        );
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (settingsError) {
-        console.error('[HotSite] Falha ao carregar configurações:', settingsError);
-      } else if (settings) {
-        setTitle(settings.title || 'Luan Maciel de Lemos');
-        setSub(settings.subtitle || '');
-      }
-
-      const { data, error: buttonsError } = await supabase
-        .from('hotsite_buttons')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order', { ascending: true });
-
-      if (cancelled) return;
-
-      if (buttonsError) {
-        console.error('[HotSite] Falha ao carregar botões:', buttonsError);
-        setError('Não foi possível carregar os botões. O banco de dados recusou a consulta ou está indisponível. Tente novamente mais tarde.');
-        setButtons([]);
-      } else {
-        setButtons(data || []);
-        if (!data?.length) {
-          setError('Nenhum botão ativo foi encontrado. Os botões podem estar desativados ou não estar sendo retornados pelo banco de dados.');
+        if (buttonsError) {
+          console.error('[HotSite] Falha ao carregar botões:', buttonsError);
+          setError('Não foi possível carregar os botões do banco de dados. Confira a conexão e as permissões do Supabase.');
+          setButtons([]);
+        } else {
+          setButtons(data || []);
+          if (!data?.length) {
+            setError('O banco não retornou botões ativos. Confira os botões no editor do HotSite.');
+          }
         }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[HotSite] Consulta de botões falhou ou excedeu 6 segundos:', err);
+        setError('A consulta dos botões demorou demais ou falhou. Verifique a conexão com o Supabase e tente novamente.');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
 
-      setLoading(false);
+      // Settings are optional and must never hold up the buttons.
+      try {
+        const { data: settings, error: settingsError } = await withTimeout(
+          supabase.from('hotsite_settings').select('*').eq('id', 1).maybeSingle(),
+          4000,
+        );
+        if (cancelled) return;
+        if (settingsError) {
+          console.error('[HotSite] Falha ao carregar configurações:', settingsError);
+        } else if (settings) {
+          setTitle(settings.title || 'Luan Maciel de Lemos');
+          setSub(settings.subtitle || '');
+        }
+      } catch (err) {
+        console.error('[HotSite] Configurações demoraram demais ou falharam:', err);
+      }
     }
 
-    load();
+    void load();
     return () => { cancelled = true; };
   }, []);
 
